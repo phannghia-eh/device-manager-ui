@@ -3,7 +3,7 @@ import {connect} from 'react-redux'
 import ReactTable from 'react-table'
 import Modal from 'react-modal'
 
-import mockingData from '../mockingData'
+import {addNewDevice, editDevice, exportExcel, fetchListDevice} from "../actions/device";
 
 class Dashboard extends React.Component {
   constructor(props) {
@@ -11,9 +11,8 @@ class Dashboard extends React.Component {
 
     this.state = {
       modal: {
-        add: {
-          isOpen: false
-        },
+        isOpen: false,
+        type: 0, //0: add 1: edit
         data: {
           name: '',
           type: 1,
@@ -21,11 +20,10 @@ class Dashboard extends React.Component {
           importedAt: '',
           status: '',
           id: ''
-        }
+        },
       },
       table: {
         device: {
-          data: mockingData,
           columns: [
             {
               Header: 'id',
@@ -69,7 +67,7 @@ class Dashboard extends React.Component {
                 return (
                   <div className='btn-group'>
                     <button className='btn btn-info'
-                            onClick={(e) => this.handleOnEditDevice(e, row.original)}>Sửa
+                            onClick={(e) => this.handleOnOpenEditDeviceModal(e, row.original)}>Sửa
                     </button>
                   </div>
                 )
@@ -77,12 +75,22 @@ class Dashboard extends React.Component {
             }
           ]
         }
+      },
+      excel: {
+        data: [
+          // ["Mã thiết bị", ]
+        ]
       }
     }
   }
 
+  componentDidMount() {
+    this.props.dispatch(fetchListDevice())
+  }
+
   render() {
     console.log('DASHBOARD STATE', this.state)
+    console.log('DASHBOARD PROPS', this.props)
 
     return (
       <div className='content-wrapper'>
@@ -97,9 +105,17 @@ class Dashboard extends React.Component {
               <div className="d-flex justify-content-center">
                 <button type='button'
                         className='btn btn-outline bg-primary text-primary-800 btn-icon btn-float'
-                        onClick={() => this.handleOnOpenModal('add')}>
+                        onClick={() => this.handleOnOpenAddNewDeviceModal()}>
                   <i className='icon-plus2'></i>
                   <span>Add</span>
+                </button>
+              </div>
+              <div className="d-flex justify-content-center">
+                <button type='button'
+                        className='btn btn-outline bg-primary text-primary-800 btn-icon btn-float'
+                        onClick={() => this.handleOnExportExcel()}>
+                  <i className='icon-database-export'></i>
+                  <span>Export</span>
                 </button>
               </div>
             </div>
@@ -109,11 +125,11 @@ class Dashboard extends React.Component {
             className={'text-center m-1'}
             filterable={true}
             columns={this.state.table.device.columns}
-            data={this.state.table.device.data}/>
+            data={this.props.device.items}/>
 
         </div>
-        <Modal isOpen={this.state.modal.add.isOpen}
-               onRequestClose={() => this.handleOnCloseModal('add')}
+        <Modal isOpen={this.state.modal.isOpen}
+               onRequestClose={() => this.handleOnCloseModal()}
                style={{zIndex: '999'}}
                className='modal-lg'
                ariaHideApp={false}
@@ -125,90 +141,161 @@ class Dashboard extends React.Component {
               <button className="close icon-x"
                       type="button"
                       data-dismiss="modal"
-                      onClick={() => this.handleOnCloseModal('add')}/>
+                      onClick={() => this.handleOnCloseModal()}/>
             </div>
 
-            <div className="modal-body">
-              <form>
-                <div className='form-group row'>
-                  <label className='col-md-3 col-form-label'>Mã thiết bị</label>
-                  <div className='col-md-9'>
-                    <input type='text' className='form-control' value={this.state.modal.data.id}
-                           onChange={(e) => this.handleOnChangeInput(e, 'id')}/>
-                  </div>
-                </div>
+            {this.renderModalBody()}
 
-                <div className='form-group row'>
-                  <label className='col-md-3 col-form-label'>Tên</label>
-                  <div className='col-md-9'>
-                    <input type='text' className='form-control' value={this.state.modal.data.name}
-                           onChange={(e) => this.handleOnChangeInput(e, 'name')}/>
-                  </div>
-                </div>
+            {this.renderModalFooter()}
 
-                <div className='form-group row'>
-                  <label className='col-md-3 col-form-label'>Loại</label>
-                  <div className='col-md-9'>
-                    <select className='form-control' value={this.state.modal.data.type}
-                            onChange={(e) => this.handleOnChangeInput(e, 'type')}>
-                      <option value={1}>Tài sản cố định</option>
-                      <option value={2}>Công cụ dụng cụ</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className='form-group row'>
-                  <label className='col-md-3 col-form-label'>Serial Number</label>
-                  <div className='col-md-9'>
-                    <input type='text' className='form-control' value={this.state.modal.data.serialNumber}
-                           onChange={(e) => this.handleOnChangeInput(e, 'serialNumber')}/>
-                  </div>
-                </div>
-
-                <div className='form-group row'>
-                  <label className='col-md-3 col-form-label'>Ngày nhập về</label>
-                  <div className='col-md-9'>
-                    <input type='date' className='form-control' value={this.state.modal.data.importedAt}
-                           onChange={(e) => this.handleOnChangeInput(e, 'importedAt')}/>
-                  </div>
-                </div>
-
-                <div className='form-group row'>
-                  <label className='col-md-3 col-form-label'>Tình trạng</label>
-                  <div className='col-md-9'>
-                    <input type='number' className='form-control' value={this.state.modal.data.status}
-                           onChange={(e) => this.handleOnChangeInput(e, 'status')}/>
-                  </div>
-                </div>
-              </form>
-            </div>
-
-            <div className='modal-footer'>
-              <div className='btn-group'>
-                <button className='btn btn-primary' onClick={() => this.handleOnAddNewDevice()}>Tạo mới</button>
-                <button className='btn btn-danger' onClick={() => this.handleOnCloseModal('add')}>Hủy tạo</button>
-              </div>
-            </div>
           </div>
         </Modal>
       </div>
     )
   }
 
-  handleOnCloseModal(modalType) {
+  renderModalBody() {
+    switch (this.state.modal.type) {
+      case 0:
+        return (
+          <div className="modal-body">
+            <form>
+              <div className='form-group row'>
+                <label className='col-md-3 col-form-label'>Mã thiết bị</label>
+                <div className='col-md-9'>
+                  <input type='text' className='form-control' value={this.state.modal.data.id}
+                         onChange={(e) => this.handleOnChangeInput(e, 'id')}/>
+                </div>
+              </div>
+
+              <div className='form-group row'>
+                <label className='col-md-3 col-form-label'>Tên</label>
+                <div className='col-md-9'>
+                  <input type='text' className='form-control' value={this.state.modal.data.name}
+                         onChange={(e) => this.handleOnChangeInput(e, 'name')}/>
+                </div>
+              </div>
+
+              <div className='form-group row'>
+                <label className='col-md-3 col-form-label'>Loại</label>
+                <div className='col-md-9'>
+                  <select className='form-control' value={this.state.modal.data.type}
+                          onChange={(e) => this.handleOnChangeInput(e, 'type')}>
+                    <option value={1}>Tài sản cố định</option>
+                    <option value={2}>Công cụ dụng cụ</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className='form-group row'>
+                <label className='col-md-3 col-form-label'>Serial Number</label>
+                <div className='col-md-9'>
+                  <input type='text' className='form-control' value={this.state.modal.data.serialNumber}
+                         onChange={(e) => this.handleOnChangeInput(e, 'serialNumber')}/>
+                </div>
+              </div>
+
+              <div className='form-group row'>
+                <label className='col-md-3 col-form-label'>Ngày nhập về</label>
+                <div className='col-md-9'>
+                  <input type='date' className='form-control' value={this.state.modal.data.importedAt}
+                         onChange={(e) => this.handleOnChangeInput(e, 'importedAt')}/>
+                </div>
+              </div>
+
+              <div className='form-group row'>
+                <label className='col-md-3 col-form-label'>Tình trạng</label>
+                <div className='col-md-9'>
+                  <input type='number' className='form-control' value={this.state.modal.data.status}
+                         onChange={(e) => this.handleOnChangeInput(e, 'status')}/>
+                </div>
+              </div>
+            </form>
+          </div>
+        )
+      case 1:
+        return (
+          <div className="modal-body">
+            <form>
+              <div className='form-group row'>
+                <label className='col-md-3 col-form-label'>Mã thiết bị</label>
+                <div className='col-md-9'>
+                  <input type='text' className='form-control' value={this.state.modal.data.id} disabled={true}/>
+                </div>
+              </div>
+
+              <div className='form-group row'>
+                <label className='col-md-3 col-form-label'>Tên thiết bị</label>
+                <div className='col-md-9'>
+                  <input type='text' className='form-control' value={this.state.modal.data.name} disabled={true}/>
+                </div>
+              </div>
+
+              <div className='form-group row'>
+                <label className='col-md-3 col-form-label'>Phòng ban quản lý</label>
+                <div className='col-md-9'>
+                  <input type='text' className='form-control' value={this.state.modal.data.department}
+                         onChange={(e) => this.handleOnChangeInput(e, 'department')}/>
+                </div>
+              </div>
+
+              <div className='form-group row'>
+                <label className='col-md-3 col-form-label'>Người sử dụng</label>
+                <div className='col-md-9'>
+                  <input type='text' className='form-control' value={this.state.modal.data.assignment}
+                         onChange={(e) => this.handleOnChangeInput(e, 'assignment')}/>
+                </div>
+              </div>
+
+              <div className='form-group row'>
+                <label className='col-md-3 col-form-label'>Note</label>
+                <div className='col-md-9'>
+                  <input type='text' className='form-control' value={this.state.modal.data.note}
+                         onChange={(e) => this.handleOnChangeInput(e, 'note')}/>
+                </div>
+              </div>
+            </form>
+          </div>
+        )
+    }
+  }
+
+  renderModalFooter() {
+    switch (this.state.modal.type) {
+      case 0:
+        return (
+          <div className='modal-footer'>
+            <div className='btn-group'>
+              <button className='btn btn-primary' onClick={() => this.handleOnAddNewDevice()}>Tạo mới</button>
+              <button className='btn btn-danger' onClick={() => this.handleOnCloseModal()}>Hủy tạo</button>
+            </div>
+          </div>
+        )
+      case 1:
+        return (
+          <div className='modal-footer'>
+            <div className='btn-group'>
+              <button className='btn btn-primary' onClick={() => this.handleOnEditDevice()}>Cập nhật</button>
+              <button className='btn btn-danger' onClick={() => this.handleOnCloseModal()}>Hủy sửa</button>
+            </div>
+          </div>
+        )
+    }
+  }
+
+  handleOnCloseModal() {
     let tmpState = this.state
-    tmpState.modal[modalType].isOpen = false
+    tmpState.modal.isOpen = false
     this.setState(tmpState)
   }
 
-  handleOnOpenModal(modalType) {
-    let tmpState = this.state
-    tmpState.modal[modalType].isOpen = true
-    this.setState(tmpState)
-  }
-
-  handleOnEditDevice(e, rowData) {
+  handleOnOpenEditDeviceModal(e, rowData) {
     console.log(e.target, rowData)
+    let tmpState = this.state
+    tmpState.modal.data = rowData
+    tmpState.modal.isOpen = true
+    tmpState.modal.type = 1
+    this.setState(tmpState)
   }
 
   handleOnChangeInput(e, type) {
@@ -224,8 +311,35 @@ class Dashboard extends React.Component {
     }
   }
 
+  handleOnOpenAddNewDeviceModal() {
+    let tmpState = this.state
+    tmpState.modal.isOpen = true
+    tmpState.modal.type = 0
+    tmpState.modal.data = {
+      "type": 1,
+      "name": "a32ht0982gh nf92hf09",
+      "serialNumber": "12071205791",
+      "importedAt": "2018-02-26",
+      "status": 69,
+      // "department": "Oagi",
+      // "assignment": "Maiden",
+      // "note": "note",
+      // "lastUpdate": "2018-11-17T23:10:02-08:00",
+      "id": 101
+    }
+    this.setState(tmpState)
+  }
+
   handleOnAddNewDevice() {
-    console.log(this.state.modal.data)
+    this.props.dispatch(addNewDevice(this.state.modal.data))
+  }
+
+  handleOnEditDevice() {
+    this.props.dispatch(editDevice(this.state.modal.data))
+  }
+
+  handleOnExportExcel() {
+    this.props.dispatch(exportExcel(this.props.device.items))
   }
 }
 

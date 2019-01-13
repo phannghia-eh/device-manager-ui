@@ -13,6 +13,8 @@ import Layout from "./HOC/layout";
 import Dashboard from './components/dashboard'
 
 import '../node_modules/react-table/react-table.css'
+//IMPORT REAT-TOAST CSS
+import 'react-toastify/dist/ReactToastify.css'
 
 //import iconmoon
 import './assets/css/icons/icomoon/styles.css'
