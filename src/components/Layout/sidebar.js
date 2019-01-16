@@ -1,5 +1,6 @@
 import React from 'react'
 import {connect} from 'react-redux'
+import {Link} from 'react-router'
 
 class Sidebar extends React.Component {
   render() {
@@ -14,12 +15,12 @@ class Sidebar extends React.Component {
                 <i className="icon-menu" title="Main"></i></li>
 
               <li className="nav-item">
-                <a href="index.html" className="nav-link active">
+                <Link to="/" className="nav-link active">
                   <i className="icon-home4"></i>
                   <span>
 									Dashboard
 								</span>
-                </a>
+                </Link>
               </li>
             </div>
           </div>

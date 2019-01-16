@@ -15,7 +15,6 @@ const device = (state = initState, action) => {
         ]
       }
     case 'EDIT_DEVICE_SUCCESS':
-      console.log('PAYLOAD', action.payload.device)
       return {
         ...state,
         items: state.items.map(i => {

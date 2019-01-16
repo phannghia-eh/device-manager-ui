@@ -2,8 +2,9 @@ import React from 'react'
 import {connect} from 'react-redux'
 import ReactTable from 'react-table'
 import Modal from 'react-modal'
+import XLSX from 'xlsx'
 
-import {addNewDevice, editDevice, exportExcel, fetchListDevice} from "../actions/device";
+import {addNewDevice, editDevice, exportExcel, fetchListDevice, importExcel} from "../actions/device";
 
 class Dashboard extends React.Component {
   constructor(props) {
@@ -89,9 +90,6 @@ class Dashboard extends React.Component {
   }
 
   render() {
-    console.log('DASHBOARD STATE', this.state)
-    console.log('DASHBOARD PROPS', this.props)
-
     return (
       <div className='content-wrapper'>
         <div className='page-header page-header-light'>
@@ -103,11 +101,13 @@ class Dashboard extends React.Component {
 
             <div className="header-elements d-none">
               <div className="d-flex justify-content-center">
+                <input type='file' hidden={true} accept='.csv,.xlsx,.xls' ref='importFile'
+                       onChange={(e) => this.handleOnImportFile(e)}/>
                 <button type='button'
                         className='btn btn-outline bg-primary text-primary-800 btn-icon btn-float'
-                        onClick={() => this.handleOnOpenAddNewDeviceModal()}>
-                  <i className='icon-plus2'></i>
-                  <span>Add</span>
+                        onClick={() => this.handleOnImportExcel()}>
+                  <i className='icon-database-insert'></i>
+                  <span>Import</span>
                 </button>
               </div>
               <div className="d-flex justify-content-center">
@@ -116,6 +116,14 @@ class Dashboard extends React.Component {
                         onClick={() => this.handleOnExportExcel()}>
                   <i className='icon-database-export'></i>
                   <span>Export</span>
+                </button>
+              </div>
+              <div className="d-flex justify-content-center">
+                <button type='button'
+                        className='btn btn-outline bg-primary text-primary-800 btn-icon btn-float'
+                        onClick={() => this.handleOnOpenAddNewDeviceModal()}>
+                  <i className='icon-plus2'></i>
+                  <span>Add</span>
                 </button>
               </div>
             </div>
@@ -290,7 +298,6 @@ class Dashboard extends React.Component {
   }
 
   handleOnOpenEditDeviceModal(e, rowData) {
-    console.log(e.target, rowData)
     let tmpState = this.state
     tmpState.modal.data = rowData
     tmpState.modal.isOpen = true
@@ -340,6 +347,46 @@ class Dashboard extends React.Component {
 
   handleOnExportExcel() {
     this.props.dispatch(exportExcel(this.props.device.items))
+  }
+
+  handleOnImportExcel() {
+    this.refs.importFile.click()
+  }
+
+  handleOnImportFile(e) {
+    const file = e.target.files[0]
+    if (!file)
+      return
+    else
+      this.props.dispatch(importExcel(e, file))
+  }
+
+  onChangeFile = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    this.processFile(e, file);
+  }
+
+  processFile = (e, file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      let binary = "";
+      const bytes = new Uint8Array(e.target.result);
+      const length = bytes.byteLength;
+      for (let i = 0; i < length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const wb = XLSX.read(binary, {type: "binary", cellDates: true, cellStyles: true});
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      const data = XLSX.utils.sheet_to_json(ws, {header: 1});
+      this.setState({
+        chosenFileName: file.name,
+        data
+      });
+    }
+    reader.readAsArrayBuffer(file);
   }
 }
 
