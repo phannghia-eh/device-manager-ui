@@ -27,16 +27,16 @@ class Dashboard extends React.Component {
         device: {
           columns: [
             {
-              Header: 'id',
+              Header: 'Mã TB',
               accessor: 'id',
               maxWidth: 50,
             },
             {
-              Header: 'name',
+              Header: 'Tên TB',
               accessor: 'name'
             },
             {
-              Header: 'serialNumber',
+              Header: 'Số serial',
               accessor: 'serialNumber'
             },
             {
@@ -44,11 +44,11 @@ class Dashboard extends React.Component {
               accessor: 'department'
             },
             {
-              Header: 'assignment',
+              Header: 'Người mượn',
               accessor: 'assignment'
             },
             {
-              Header: 'note',
+              Header: 'Ghi chú',
               accessor: 'note'
             },
             {
@@ -74,6 +74,25 @@ class Dashboard extends React.Component {
                 )
               }
             }
+          ],
+          mobildeColumns: [
+            {
+              Header: 'Mã TB',
+              accessor: 'id',
+              maxWidth: 50,
+            },
+            {
+              Header: 'Tên TB',
+              accessor: 'name'
+            },
+            {
+              Header: 'Người mượn',
+              accessor: 'assignment'
+            },
+            {
+              Header: 'Ghi chú',
+              accessor: 'note'
+            },
           ]
         }
       },
@@ -90,12 +109,13 @@ class Dashboard extends React.Component {
   }
 
   render() {
+    console.log('navigator', window.navigator);
     return (
       <div className='content-wrapper'>
         <div className='page-header page-header-light'>
           <div className="page-header-content header-elements-md-inline">
             <div className="page-title d-flex">
-              <h4><i className="icon-arrow-left52"></i> <span className="font-weight-semibold">Home</span> - Dashboard
+              <h4><i className="icon-home2"></i> <span className="font-weight-semibold">Home</span> - Dashboard
               </h4>
             </div>
 
@@ -130,9 +150,12 @@ class Dashboard extends React.Component {
           </div>
 
           <ReactTable
-            className={'text-center m-1'}
+            className={'text-center m-5'}
             filterable={true}
-            columns={this.state.table.device.columns}
+            defaultFilterMethod={(filter, row) =>{
+              return new RegExp(filter.value,'g').test(row[filter.id].toLowerCase())
+            }}
+            columns={this.detectmobile() ? this.state.table.device.mobildeColumns : this.state.table.device.columns}
             data={this.props.device.items}/>
 
         </div>
@@ -363,7 +386,7 @@ class Dashboard extends React.Component {
 
   onChangeFile = (e) => {
     const file = e.target.files[0];
-    if(!file) return;
+    if (!file) return;
 
     this.processFile(e, file);
   }
@@ -387,6 +410,22 @@ class Dashboard extends React.Component {
       });
     }
     reader.readAsArrayBuffer(file);
+  }
+
+  detectmobile() {
+    if (navigator.userAgent.match(/Android/i)
+      || navigator.userAgent.match(/webOS/i)
+      || navigator.userAgent.match(/iPhone/i)
+      || navigator.userAgent.match(/iPad/i)
+      || navigator.userAgent.match(/iPod/i)
+      || navigator.userAgent.match(/BlackBerry/i)
+      || navigator.userAgent.match(/Windows Phone/i)
+    ) {
+      return true;
+    }
+    else {
+      return false;
+    }
   }
 }
 

@@ -10,9 +10,9 @@ export default function Layout(Component) {
     render() {
       return (
         <div className='dashboard'>
-          <Header/>
+          {/*<Header/>*/}
           <div className='page-content'>
-            <Sidebar/>
+            {/*<Sidebar/>*/}
             <Component {...this.props}/>
           </div>
         </div>
